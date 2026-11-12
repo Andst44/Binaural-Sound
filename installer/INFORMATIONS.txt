@@ -1,0 +1,21 @@
+IMMERSION SOUND — version de développement non signée
+
+Windows 11 x64. Film, Musique, Communication et Jeu.
+
+Cette édition ne contient pas VB-CABLE ni le Runtime Microsoft WebView2.
+Installe ces prérequis depuis leurs sites officiels si nécessaire :
+https://vb-audio.com/Cable/
+https://developer.microsoft.com/microsoft-edge/webview2/
+VB-CABLE est un donationware de VB-Audio. Toutes les participations sont
+les bienvenues : https://shop.vb-audio.com/
+Redémarre le PC après installation du pilote VB-CABLE.
+
+Ferme l'ancienne application avec Application > Quitter complètement.
+Choisis CABLE Input comme sortie Windows, CABLE Output comme entrée dans
+Immersion Sound et ton casque comme sortie. Clique sur Démarrer le son.
+Ne coche pas « Écouter ce périphérique » dans Windows.
+
+Les réglages sont conservés dans le dossier profile. La désinstallation
+conserve ce dossier et ne désinstalle pas les prérequis partagés.
+Smart App Control peut bloquer cette version non signée.
+Aucune protection Windows n'est modifiée par cet installateur.

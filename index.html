@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Immersion — Bulle sonore</title>
+<style>
+:root{color-scheme:dark;font-family:Segoe UI,system-ui,sans-serif;background:#0a101a;color:#e8eef7}*{box-sizing:border-box}body{margin:0}main{max-width:1080px;margin:auto;padding:32px 24px}header{margin-bottom:24px}small,.muted{color:#9aabc1}h1{font-size:36px;letter-spacing:-1px;margin:8px 0}p{line-height:1.6}.layout{display:grid;grid-template-columns:1.3fr 1fr;gap:28px}.stage,.controls{background:#101b2b;border:1px solid #25344a;border-radius:20px;padding:22px}canvas{width:100%;height:330px;display:block}label{display:block;margin:20px 0 8px}input[type=range]{width:100%;accent-color:#67e1c0}select,button{font:inherit;color:inherit;background:#1e3047;border:1px solid #41536c;border-radius:9px;padding:11px}button{cursor:pointer}button:hover{background:#314964}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #67e1c0;outline-offset:3px}.primary{background:#67e1c0;color:#09271f;font-weight:700}.actions{display:flex;gap:10px;flex-wrap:wrap}.value{float:right;color:#67e1c0;font-variant-numeric:tabular-nums}.positions{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:14px}.positions button{font-size:12px;padding:10px 4px;min-height:44px}.positions button[aria-pressed=true]{border-color:#67e1c0;background:#204e4a}#status{min-height:26px;color:#67e1c0}select{width:100%}footer{margin-top:20px;font-size:13px;color:#9aabc1}h2{font-size:17px;margin:0 0 12px}@media(max-width:740px){.layout{grid-template-columns:1fr}main{padding:20px 14px}h1{font-size:29px}canvas{height:290px}}
+</style>
+<main>
+<header><small>IMMERSION SOUND / PROTOTYPE 01</small><h1>Ta bulle sonore.</h1><p class="muted">Cinq niveaux · 26 positions virtuelles · Écoute au casque</p></header>
+<div class="layout"><section class="stage" aria-label="Positions sonores">
+<canvas id="scene" role="img" aria-label="Sphère enveloppante avec trois couronnes de huit positions et deux pôles centrés, tout en haut et tout en bas, autour de l’auditeur. La position active est indiquée sous le dessin."></canvas>
+<div id="location" aria-live="polite">À hauteur des oreilles · Avant</div>
+<label for="level">Niveau</label><select id="level"><option value="2">Tout en haut · centre</option><option value="1">Au-dessus</option><option value="0" selected>À hauteur des oreilles</option><option value="-1">En dessous</option><option value="-2">Tout en bas · centre</option></select>
+<button id="pole" style="margin-top:14px" hidden>Centre</button>
+<div id="positions" class="positions" aria-label="Choisir une direction"></div>
+</section>
+<section class="controls"><h2>Explorer l’espace</h2><label for="inputMode">Source audio</label><select id="inputMode"><option value="demo">Démonstration · 26 positions</option><option value="live">Films, jeux et musique · bulle à 26 positions</option></select><div id="liveSetup" hidden><p class="muted">Dans les paramètres Son de Windows, choisis la sortie virtuelle Immersion Sound (ou CABLE Input). Ici, choisis le casque ou les enceintes qui doivent recevoir le son traité.</p><button id="devices">Rechercher les périphériques</button><label for="audioInput">Entrée virtuelle</label><select id="audioInput"><option value="">Rechercher les périphériques…</option></select><label for="audioOutput">Écouter sur · casque ou enceintes</label><select id="audioOutput"><option value="">Rechercher les périphériques…</option></select><p id="deviceStatus" role="status"></p><small>Voix et scène principale devant ; ambiance répartie sur les côtés, derrière, en haut et en bas. Spatialisation créée à partir de la stéréo, sans décodage Atmos.</small><label for="profile">Profil d’écoute</label><select id="profile"><option value="film">Film</option><option value="music">Musique</option><option value="communication">Communication</option><option value="fps">Jeu</option></select><p id="profileInfo" class="muted">Film : ambiance ample autour de toi.</p><label for="envelopment">Enveloppement <output class="value" id="envelopmentValue">55 %</output></label><input id="envelopment" type="range" min="0" max="100" value="55"><small>0 : scène frontale · 100 : ambiance maximale</small></div><div class="actions"><button id="play" class="primary">Démarrer le son</button><button id="stop" disabled>Arrêter</button></div><p id="status" role="status">Prêt · volume initial faible</p>
+<label for="radius">Distance <output class="value" id="radiusValue">2,0 m</output></label><input id="radius" type="range" min="5" max="30" value="20" step="1" aria-valuetext="2 mètres"><small>50 cm à 3 m · distance virtuelle depuis toi, au centre</small>
+<label for="volume">Volume <output class="value" id="volumeValue">15 %</output></label><input id="volume" type="range" min="0" max="100" value="15">
+<label for="boost">Amplification <output class="value" id="boostValue">+6 dB</output></label><input id="boost" type="range" min="0" max="12" value="6" step="1"><small>Pour relever les sources peu fortes</small>
+<label for="bass">Basses <output class="value" id="bassValue">0 dB</output></label><input id="bass" type="range" min="-12" max="6" value="0">
+<label for="motion">Parcours</label><select id="motion"><option value="manual">Position fixe · sélection manuelle</option><option value="orbit">Rotation sur le niveau choisi</option><option value="sphere" selected>Voyage sur les cinq niveaux</option></select>
+<label for="sound">Son de test</label><select id="sound"><option value="noise">Souffle pulsé · repérage spatial</option><option value="tone">Son grave et harmoniques</option></select>
+</section></div>
+<footer><p>Pour ce test, désactive le son spatial Windows (Dolby Atmos / Windows Sonic) et garde le micro du casque fermé dans les autres applications. Commence à faible volume.</p><p>Simulation binaurale expérimentale : 5 unités correspondent à un rayon virtuel de 50 cm, et 30 à 3 m. La distance ressentie au casque n’est pas calibrée et varie selon l’auditeur. Les basses passent par le casque ; aucun caisson physique n’est simulé fidèlement. Le mode Windows reçoit les films et jeux via le câble virtuel en stéréo ; il ne décode pas Dolby Atmos.</p></footer>
+</main>
+<script src="sphere-audio.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const names=['Avant','Avant droite','Droite','Arrière droite','Arrière','Arrière gauche','Gauche','Avant gauche'];
+const levelNames={'2':'Tout en haut','-2':'Tout en bas','1':'Au-dessus','0':'À hauteur des oreilles','-1':'En dessous'};
+let liveStream,liveNode,liveGraph,livePans=[],room;
+let ctx,master,pan,dry,wet,filter,bassFilter,sourceGate,noiseGain,toneGain,noise,osc,osc2,mod,modDepth;
+let running=false,busy=false,angle=0,elevation=0,phase=0,last=0,lastLabel='';
+const buttons=names.map((name,i)=>{const b=document.createElement('button');b.textContent=name;b.setAttribute('aria-pressed',String(i===0));b.onclick=()=>{$('motion').value='manual';angle=i*Math.PI/4;elevation=Number($('level').value)*Math.PI/4;updateAudio();draw();};$('positions').append(b);return b;});
+function syncLevelControls(){const pole=Math.abs(Number($('level').value))===2;$('positions').style.display=pole?'none':'';$('pole').hidden=!pole;$('pole').textContent=Number($('level').value)>0?'Centre · au-dessus de la tête':'Centre · sous les pieds';$('motion').querySelector('[value=orbit]').disabled=pole;}
+$('pole').onclick=()=>{$('motion').value='manual';elevation=Number($('level').value)*Math.PI/4;updateAudio();draw();};
+function smooth(param,value){param.setTargetAtTime(value,ctx.currentTime,.08);}
+function initAudio(){
+ ctx=new AudioContext(); master=ctx.createGain();master.gain.value=0;
+ const limiter=ctx.createDynamicsCompressor();limiter.threshold.value=-12;limiter.knee.value=8;limiter.ratio.value=12;limiter.attack.value=.003;limiter.release.value=.2;master.connect(limiter).connect(ctx.destination);
+ sourceGate=ctx.createGain();sourceGate.gain.value=.6;
+ mod=ctx.createOscillator();mod.frequency.value=2;modDepth=ctx.createGain();modDepth.gain.value=.25;mod.connect(modDepth).connect(sourceGate.gain);mod.start();
+ noiseGain=ctx.createGain();noiseGain.gain.value=.22;toneGain=ctx.createGain();toneGain.gain.value=0;
+ const buffer=ctx.createBuffer(1,ctx.sampleRate*3,ctx.sampleRate);const data=buffer.getChannelData(0);let prev=0;for(let i=0;i<data.length;i++){prev=.55*prev+.45*(Math.random()*2-1);data[i]=prev;}noise=ctx.createBufferSource();noise.buffer=buffer;noise.loop=true;noise.connect(noiseGain).connect(sourceGate);noise.start();
+ osc=ctx.createOscillator();osc.type='triangle';osc.frequency.value=150;osc2=ctx.createOscillator();osc2.type='sine';osc2.frequency.value=75;osc.connect(toneGain);osc2.connect(toneGain);toneGain.connect(sourceGate);osc.start();osc2.start();
+ bassFilter=ctx.createBiquadFilter();bassFilter.type='lowshelf';bassFilter.frequency.value=160;
+ filter=ctx.createBiquadFilter();filter.type='lowpass';filter.Q.value=.5;sourceGate.connect(bassFilter).connect(filter);
+ pan=ctx.createPanner();pan.panningModel='HRTF';pan.distanceModel='inverse';pan.rolloffFactor=0; // Distance cues are controlled separately, not by master volume.
+ dry=ctx.createGain();wet=ctx.createGain();filter.connect(pan).connect(dry).connect(master);
+ room=ctx.createGain();const convolver=ctx.createConvolver();
+ function impulse(seconds,decay,predelay){const ir=ctx.createBuffer(2,Math.ceil(ctx.sampleRate*seconds),ctx.sampleRate);for(let c=0;c<2;c++){const d=ir.getChannelData(c);for(let i=0;i<d.length;i++){const t=i/ctx.sampleRate;d[i]=t<predelay?0:(Math.random()*2-1)*Math.exp(-(t-predelay)*decay);}}return ir;}
+ convolver.buffer=impulse(1.8,3.5,.025);
+ filter.connect(room);room.connect(convolver).connect(wet);wet.connect(master);
+
+ ctx.onstatechange=()=>{if(ctx.state==='suspended'&&running){running=false;releaseLive();syncButtons();$('status').textContent='Audio suspendu · clique sur Démarrer pour reprendre';}};
+ updateAudio();
+}
+function updateAudio(){
+ const r=Number($('radius').value),v=Number($('volume').value),b=Number($('bass').value);
+ $('boostValue').textContent='+'+$('boost').value+' dB';
+ $('envelopmentValue').textContent=$('envelopment').value+' %';
+ $('radiusValue').textContent=(r/10).toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:2})+' m';$('radius').setAttribute('aria-valuetext',String(r/10)+' mètres');$('volumeValue').textContent=v+' %';$('bassValue').textContent=b+' dB';
+ if(!ctx)return;const distance=Math.min(1,(r-.5)/9.5);const far=Math.max(0,Math.min(1,(r-10)/40));
+ const beyond=Math.max(0,Math.min(1,(r-50)/150));
+ const cutoff=(16000-distance*12000)*Math.pow(.35,far)*Math.pow(.5,beyond);const direct=(1-distance*.45)*Math.pow(.27,far)*Math.pow(.25,beyond);const ambience=.03+distance*.55+far*.22+beyond*.1;
+ smooth(pan.positionX,r*Math.cos(elevation)*Math.sin(angle));smooth(pan.positionY,r*Math.sin(elevation));smooth(pan.positionZ,-r*Math.cos(elevation)*Math.cos(angle));
+ smooth(filter.frequency,cutoff);smooth(dry.gain,direct);smooth(wet.gain,ambience);smooth(bassFilter.gain,b);smooth(master.gain,running?(v/100)*Math.pow(10,Number($('boost').value)/20):0);
+ const live=$('inputMode').value==='live';
+ smooth(noiseGain.gain,!live&&$('sound').value==='noise'?.65:0);smooth(toneGain.gain,!live&&$('sound').value==='tone'?.12:0);
+ if(liveGraph){const profile=$('profile').value;const fps=profile==='fps',music=profile==='music',communication=profile==='communication';
+ liveGraph.set({radius:r,cutoff:communication?12000:music?20000:fps?Math.max(9000,cutoff):cutoff,directLevel:(communication||music)?1:fps?Math.max(.8,direct):direct,bassDb:communication?Math.min(b,0):b,envelopment:communication?0:Number($('envelopment').value)/100,roomLevel:communication?0:ambience*(music?.03:fps?.15:1),communication});}
+
+}
+function syncButtons(){$('play').disabled=running||busy;$('stop').disabled=!running||busy;for(const id of ['inputMode','audioInput','audioOutput','devices'])$(id).disabled=running||busy;}
+function releaseLive(){if(liveStream)liveStream.getTracks().forEach(t=>t.stop());liveStream=null;if(liveGraph)liveGraph.destroy();liveGraph=null;if(liveNode)liveNode.disconnect();liveNode=null;livePans=[];}
+
+const settingsKey='immersion-sound.settings.v1';
+const settingIds=['inputMode','profile','radius','volume','boost','bass','envelopment','motion','sound','level'];
+let savedSettings={};
+try{const value=JSON.parse(localStorage.getItem(settingsKey));if(value&&value.version===1&&typeof value.controls==='object'&&value.controls)savedSettings=value;}catch{}
+function saveSettings(){
+ const controls=Object.fromEntries(settingIds.map(id=>[id,$(id).value]));
+ savedSettings={version:1,controls,devices:savedSettings.devices||{},angle,elevation};
+ try{localStorage.setItem(settingsKey,JSON.stringify(savedSettings));}catch{}
+}
+function restoreSettings(){
+ if(!savedSettings.controls)return false;
+ for(const id of settingIds){
+  const el=$(id),value=savedSettings.controls[id];
+  if(typeof value!=='string')continue;
+  if(el.tagName==='SELECT'){if([...el.options].some(o=>o.value===value))el.value=value;}
+  else if(value.trim()&&Number.isFinite(Number(value)))el.value=String(Math.max(Number(el.min),Math.min(Number(el.max),Number(value))));
+ }
+ if(Number.isFinite(savedSettings.angle))angle=savedSettings.angle%(2*Math.PI);
+ elevation=Number.isFinite(savedSettings.elevation)?Math.max(-Math.PI/2,Math.min(Math.PI/2,savedSettings.elevation)):Number($('level').value)*Math.PI/4;
+ $('envelopment').disabled=$('profile').value==='communication';
+ $('profileInfo').textContent=listeningProfiles[$('profile').value].info;
+ syncLevelControls();syncModeUI();updateAudio();draw();
+ return true;
+}
+function installSettingsSaving(){
+ for(const id of settingIds)for(const event of ['input','change'])$(id).addEventListener(event,saveSettings);
+ for(const id of ['audioInput','audioOutput'])$(id).addEventListener('change',()=>{
+  if($(id).value){savedSettings.devices??={};savedSettings.devices[id]={id:$(id).value,label:$(id).selectedOptions[0].text};saveSettings();}
+ });
+ for(const el of [...buttons,$('pole')])el.addEventListener('click',saveSettings);
+ window.addEventListener('pagehide',saveSettings);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)saveSettings();});
+}
+
+function isVirtualOutput(label){return /CABLE|VB.Audio|Immersion Sound/i.test(label);}
+function fillDevices(devices){
+ for(const [id,kind] of [['audioInput','audioinput'],['audioOutput','audiooutput']]){
+  const select=$(id),previous=select.value,saved=savedSettings.devices?.[id];select.replaceChildren();
+  const available=devices.filter(d=>d.kind===kind&&d.deviceId&&d.deviceId!=='default'&&d.deviceId!=='communications'&&(kind!=='audiooutput'||!isVirtualOutput(d.label)));
+  for(const [i,d] of available.entries())select.add(new Option(d.label||((kind==='audioinput'?'Entrée ':'Sortie ')+(i+1)+' · autorisation nécessaire'),d.deviceId));
+  if(!available.length)select.add(new Option('Aucun périphérique accessible · autoriser l’audio',''));
+  const preferred=[...select.options].find(o=>id==='audioInput'?/CABLE Output/i.test(o.text):/G435/i.test(o.text)&&!/Hands.Free/i.test(o.text));
+  const remembered=available.find(d=>d.deviceId===saved?.id)||available.find(d=>saved?.label&&d.label===saved.label);
+  if(remembered)select.value=remembered.deviceId;else if([...select.options].some(o=>o.value===previous&&previous))select.value=previous;else if(preferred)select.value=preferred.value;
+  if(!saved&&select.value){savedSettings.devices??={};savedSettings.devices[id]={id:select.value,label:select.selectedOptions[0].text};}
+ }
+}
+function audioError(e){
+ const help=' Dans Edge, ouvre http://127.0.0.1:18765 puis autorise le microphone pour cette adresse. Page actuelle : '+location.origin+'.';
+ if(e.name==='NotAllowedError'||e.name==='SecurityError')return 'L’accès audio est refusé par le navigateur ou Windows.'+help;
+ if(e.name==='NotFoundError')return 'Aucune entrée audio accessible. Vérifie que CABLE Output est activé dans Windows.';
+ if(e.name==='NotReadableError')return 'L’entrée audio est occupée ou indisponible. Ferme les applications qui la monopolisent, puis réessaie.';
+ return 'Détection audio impossible : '+e.message+help;
+}
+let deviceScanVersion=0,permissionScanPending=false;
+async function scanDevices(requestPermission=false){
+ if(running||busy||(!requestPermission&&permissionScanPending))return;
+ const version=++deviceScanVersion;let permissionStream;
+ if(requestPermission)permissionScanPending=true;
+ if(!navigator.mediaDevices?.enumerateDevices){permissionScanPending=false;$('deviceStatus').textContent='Ce navigateur ne permet pas l’accès aux périphériques. Ouvre lancer-immersion.cmd pour utiliser Edge.';return;}
+ $('deviceStatus').textContent=requestPermission?'Autorisation audio en attente : vérifie la demande du navigateur…':'Recherche des périphériques…';
+ let permissionError=null;
+ try{
+  const initial=await navigator.mediaDevices.enumerateDevices();if(version!==deviceScanVersion)return;fillDevices(initial);
+  if(requestPermission){
+   try{const cable=initial.find(d=>d.kind==='audioinput'&&/CABLE Output/i.test(d.label));permissionStream=await navigator.mediaDevices.getUserMedia({audio:cable?{deviceId:{exact:cable.deviceId},echoCancellation:false,noiseSuppression:false,autoGainControl:false}:true});}
+   catch(e){permissionError=e;}
+   const authorizedDevices=await navigator.mediaDevices.enumerateDevices();if(version!==deviceScanVersion)return;fillDevices(authorizedDevices);
+  }
+  if(permissionError){$('deviceStatus').textContent=audioError(permissionError)+' ['+permissionError.name+']';return;}
+  const inputs=[...$('audioInput').options].filter(o=>o.value).length, outputs=[...$('audioOutput').options].filter(o=>o.value).length;
+  if(requestPermission&&(!inputs||!outputs)){$('deviceStatus').textContent='Autorisation demandée, mais '+inputs+' entrée(s) et '+outputs+' sortie(s) accessibles. Vérifie l’accès au microphone pour les applications de bureau dans Windows et ouvre la démo à http://127.0.0.1:18765 dans Edge.';return;}
+  const ready=/CABLE Output/i.test($('audioInput').selectedOptions[0]?.text||'')&&!!$('audioOutput').value&&!isVirtualOutput($('audioOutput').selectedOptions[0]?.text||'');
+  $('deviceStatus').textContent=ready?'Entrée virtuelle détectée. Choisis ton casque ou tes enceintes, puis démarre.':'Clique sur « Autoriser et rechercher » pour afficher les noms des périphériques. Si aucune demande ne s’ouvre, utilise lancer-immersion.cmd.';
+ }catch(e){if(version===deviceScanVersion)$('deviceStatus').textContent=audioError(e);}
+ finally{if(permissionStream)permissionStream.getTracks().forEach(t=>t.stop());if(version===deviceScanVersion&&requestPermission)permissionScanPending=false;}
+}
+$('devices').textContent='Autoriser et rechercher';
+$('devices').onclick=()=>scanDevices(true);
+if(location.protocol==='file:'){$('deviceStatus').textContent='Ouvre http://127.0.0.1:18765 dans Edge pour conserver une adresse stable pour les autorisations audio.';}
+function syncModeUI(){const live=$('inputMode').value==='live';$('liveSetup').hidden=!live;for(const id of ['level','motion','sound'])$(id).disabled=live;buttons.forEach(b=>b.disabled=live);$('pole').disabled=live;draw();}
+$('inputMode').onchange=()=>{stop();syncModeUI();if($('inputMode').value==='live')scanDevices(false);};
+async function connectLive(){
+ if(!ctx.setSinkId)throw new Error('La sélection de sortie nécessite une version récente de Edge ou Chrome.');
+ const input=$('audioInput').selectedOptions[0],output=$('audioOutput').selectedOptions[0];
+ if(!input||!/CABLE Output/i.test(input.text))throw new Error('Sélectionne CABLE Output comme entrée.');
+ if(!output||!output.value||isVirtualOutput(output.text))throw new Error('Choisis une sortie physique : casque ou enceintes. La sortie virtuelle est exclue pour éviter une boucle audio.');
+ await ctx.setSinkId(output.value);
+ liveStream=await navigator.mediaDevices.getUserMedia({audio:{deviceId:{exact:input.value},channelCount:{ideal:2},echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+ liveNode=ctx.createMediaStreamSource(liveStream);
+ liveGraph=ImmersionSphere.create(ctx,liveNode,master,room);livePans=liveGraph.routes.map(route=>route.panner);
+}
+$('play').onclick=async()=>{if(busy)return;busy=true;syncButtons();try{if(!ctx)initAudio();await ctx.resume();if(ctx.state!=='running')throw new Error('Audio indisponible');if($('inputMode').value==='live')await connectLive();running=true;last=0;updateAudio();draw();$('status').textContent=$('inputMode').value==='live'?'Films, jeux et musique · bulle à 26 positions active':'Lecture · casque stéréo binaural';}catch(e){releaseLive();$('status').textContent=e.message;console.error(e);}finally{busy=false;syncButtons();}};
+function stop(){running=false;updateAudio();releaseLive();syncButtons();draw();$('status').textContent='Arrêté';}
+$('stop').onclick=stop;
+
+const listeningProfiles={
+ film:{envelopment:55,info:'Film : ambiance ample autour de toi.'},
+ fps:{envelopment:25,info:'Jeu : son direct renforcé, aigus préservés, réverbération réduite. Pour ce profil, utilise la sortie stéréo du jeu sans son 3D/HRTF supplémentaire.'},
+ music:{envelopment:10,info:'Musique : scène stéréo devant toi, fréquences préservées et très peu de réverbération. La spatialisation au casque reste active.'},
+ communication:{envelopment:0,info:'Communication : voix reçues plus présentes, graves parasites atténués, sans ambiance ni réverbération. Ce mode ne modifie pas ton microphone.'}
+};
+$('profile').onchange=()=>{const profile=$('profile').value,settings=listeningProfiles[profile];$('envelopment').value=String(settings.envelopment);$('envelopment').disabled=profile==='communication';$('profileInfo').textContent=settings.info;updateAudio();draw();};
+for(const id of ['radius','volume','bass','sound','envelopment','boost'])$(id).addEventListener('input',()=>{updateAudio();draw();});
+$('level').onchange=()=>{syncLevelControls();$('motion').value='manual';elevation=Number($('level').value)*Math.PI/4;updateAudio();draw();};
+$('motion').onchange=()=>{phase=0;if($('motion').value!=='sphere')elevation=Number($('level').value)*Math.PI/4;updateAudio();draw();};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&running&&$('inputMode').value==='demo')stop();});
+window.addEventListener('pagehide',()=>{releaseLive();if(ctx)ctx.close();});
+function draw(){
+ const canvas=$('scene'),w=canvas.clientWidth,h=canvas.clientHeight,dpr=window.devicePixelRatio||1;if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}const g=canvas.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+ const radius=Number($('radius').value),scale=(Math.min(w*.37,h*.37))*(.62+.38*Math.log1p(radius-.5)/Math.log1p(29.5)),cx=w/2,cy=h/2;
+ function project(a,e){return[cx+Math.sin(a)*Math.cos(e)*scale,cy-Math.sin(e)*Math.sqrt(1-.3*.3)*scale-Math.cos(a)*Math.cos(e)*scale*.3];}
+ // Project a sphere with the same tilt as the three latitude rings.
+ const vertical=Math.sqrt(1-.3*.3);
+ const halo=g.createRadialGradient(cx-scale*.25,cy-scale*.3,0,cx,cy,scale);
+ halo.addColorStop(0,'rgba(103,225,192,.025)');halo.addColorStop(.82,'rgba(103,225,192,.055)');halo.addColorStop(1,'rgba(103,225,192,.14)');
+ g.fillStyle=halo;g.beginPath();g.arc(cx,cy,scale,0,Math.PI*2);g.fill();
+ g.strokeStyle='#527d83';g.lineWidth=1.4;g.stroke();
+ g.strokeStyle='rgba(103,225,192,.18)';g.lineWidth=1;
+ for(let meridian=0;meridian<4;meridian++){g.beginPath();for(let j=0;j<=96;j++){const t=j/96*Math.PI*2,a=meridian*Math.PI/4;const x=cx+Math.sin(a)*Math.cos(t)*scale,y=cy-(Math.sin(t)*vertical+Math.cos(a)*Math.cos(t)*.3)*scale;if(j===0)g.moveTo(x,y);else g.lineTo(x,y);}g.stroke();}
+ g.strokeStyle='#31465e';g.lineWidth=1;
+ for(const level of [-1,0,1]){const e=level*Math.PI/4;g.beginPath();g.ellipse(cx,cy-Math.sin(e)*Math.sqrt(1-.3*.3)*scale,Math.cos(e)*scale,Math.cos(e)*scale*.3,0,0,Math.PI*2);g.stroke();for(let i=0;i<8;i++){const [x,y]=project(i*Math.PI/4,e);g.fillStyle='#8b9bb0';g.beginPath();g.arc(x,y,4,0,Math.PI*2);g.fill();}}
+ for(const pole of [-1,1]){const [px,py]=project(0,pole*Math.PI/2);g.fillStyle='#8b9bb0';g.beginPath();g.arc(px,py,5,0,Math.PI*2);g.fill();g.font='12px Segoe UI';g.textAlign='left';g.fillText(pole>0?'Sommet':'Base',px+12,py+4);}
+ if($('inputMode').value==='live'){for(const p of ImmersionSphere.positions){const [px,py]=project(p.direction*Math.PI/4,p.level*Math.PI/4);g.fillStyle=running?'#67e1c0':'#8b9bb0';g.beginPath();g.arc(px,py,5,0,Math.PI*2);g.fill();}}
+ const [x,y]=project(angle,elevation);g.strokeStyle='#67e1c0';if($('inputMode').value!=='live'){g.setLineDash([4,5]);g.beginPath();g.moveTo(cx,cy);g.lineTo(x,y);g.stroke();g.setLineDash([]);g.fillStyle='#67e1c0';g.beginPath();g.arc(x,y,8,0,Math.PI*2);g.fill();}g.fillStyle='#e8eef7';g.beginPath();g.arc(cx,cy,7,0,Math.PI*2);g.fill();g.font='13px Segoe UI';g.textAlign='center';g.fillText('Toi',cx,cy+25);g.fillStyle='#9aabc1';g.fillText('AVANT',cx,18);g.fillText('ARRIÈRE',cx,h-10);
+ const dir=((Math.round(angle/(Math.PI/4))%8)+8)%8;const l=Math.max(-2,Math.min(2,Math.round(elevation/(Math.PI/4))));const isPole=Math.abs(l)===2;const label=$('inputMode').value==='live'?(running?'Films et jeux · 26 positions virtuelles actives':'Films, jeux et musique · bulle à 26 positions prête'):levelNames[l]+' · '+(isPole?'Centre':names[dir]);if(label!==lastLabel){$('location').textContent=label;lastLabel=label;}buttons.forEach((b,i)=>b.setAttribute('aria-pressed',String(!isPole&&i===dir)));$('pole').setAttribute('aria-pressed',String(isPole));
+}
+function tick(time){const dt=last?Math.min((time-last)/1000,.1):0;last=time;if(running&&$('inputMode').value==='demo'&&$('motion').value!=='manual'){phase+=dt;angle+=dt*Math.PI/8;if($('motion').value==='sphere')elevation=Math.sin(phase*Math.PI/12)*Math.PI/2;updateAudio();draw();}requestAnimationFrame(tick);}
+new ResizeObserver(draw).observe($('scene'));draw();requestAnimationFrame(tick);
+function applyLaunchProfile(){const launchProfile=location.hash==='#stadium'?'music':location.hash.slice(1);if(Object.hasOwn(listeningProfiles,launchProfile)){$('inputMode').value='live';$('inputMode').onchange();$('profile').value=launchProfile;$('profile').onchange();}}
+window.addEventListener('hashchange',applyLaunchProfile);if(!restoreSettings())applyLaunchProfile();
+installSettingsSaving();
+window.addEventListener('pageshow',()=>{syncModeUI();if($('inputMode').value==='live')scanDevices(false);});
+syncModeUI();
+</script>
+</html>

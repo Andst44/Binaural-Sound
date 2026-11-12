@@ -1,0 +1,10 @@
+node_modules/
+.cache/
+Immersion Sound Windows/
+dist/
+**/profile/
+**/test-profile/
+**/bin/
+**/obj/
+*.log
+*-preview.png

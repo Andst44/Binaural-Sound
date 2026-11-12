@@ -1,0 +1,11 @@
+{
+  "name": "immersion-sound",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "node verify.cjs && node verify-audio.cjs && node verify-settings.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}
