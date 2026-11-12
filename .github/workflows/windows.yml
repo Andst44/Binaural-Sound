@@ -1,0 +1,41 @@
+name: Windows unsigned build
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build from official SDK
+        shell: pwsh
+        run: ./build-public.ps1
+      - name: Test simulated audio and settings
+        shell: pwsh
+        run: |
+          npm install --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm test
+      - name: Prepare Inno Setup compiler
+        shell: pwsh
+        run: |
+          $download = Join-Path $env:RUNNER_TEMP 'inno.exe'
+          Invoke-WebRequest 'https://github.com/jrsoftware/issrc/releases/download/is-7_1_1/innosetup-7.1.1-x64.exe' -OutFile $download
+          if ((Get-FileHash $download -Algorithm SHA256).Hash -ne '8a5a6711c3766a6e5fb74f280ba0e3551e719ce94538d901fdbd1f8f9920b3f0') { throw 'Compiler checksum mismatch' }
+          if ((Get-AuthenticodeSignature $download).Status -ne 'Valid') { throw 'Compiler signature invalid' }
+          $dest = Join-Path $env:RUNNER_TEMP 'InnoSetup'
+          $proc = Start-Process $download -ArgumentList @('/VERYSILENT','/CURRENTUSER','/NOICONS','/NORESTART',('/DIR="'+$dest+'"')) -Wait -PassThru -WindowStyle Hidden
+          if ($proc.ExitCode -ne 0) { throw 'Compiler install failed' }
+          & (Join-Path $dest 'ISCC.exe') installer/ImmersionSound.iss
+          if ($LASTEXITCODE -ne 0) { throw 'Installer build failed' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ImmersionSound-unsigned-installer
+          path: dist/ImmersionSound-OpenSource-Setup.exe
+          if-no-files-found: error
