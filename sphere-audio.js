@@ -35,6 +35,15 @@ globalThis.ImmersionSphere = (() => {
     mid.connect(common);
     const direct=gain(0), surround=gain(0), reverb=gain(0);
     direct.connect(output);surround.connect(output);filter.connect(reverb).connect(room);
+    // Short, deterministic stereo room response: early reflections and a soft decay.
+    const povRoom=own(context.createConvolver()),povWet=gain(0);
+    const response=context.createBuffer(2,Math.ceil(context.sampleRate*.45),context.sampleRate);
+    for(let ch=0;ch<2;ch++){
+      const data=response.getChannelData(ch);let seed=79+ch*101;
+      for(let i=0;i<data.length;i++){const t=i/context.sampleRate;seed=(seed*1664525+1013904223)>>>0;if(t>.012)data[i]=(seed/4294967296-.5)*.06*Math.exp(-t*18);}
+      for(const [time,level] of [[.018,.65],[.031,.42],[.047,.28],[.073,.16]])data[Math.round((time+ch*.003)*context.sampleRate)]+=level;
+    }
+    povRoom.buffer=response;filter.connect(povRoom).connect(povWet).connect(output);
     const surroundCount=23;
     positions.forEach((position,index)=>{
       const panner=own(context.createPanner());panner.panningModel='HRTF';panner.rolloffFactor=0;
@@ -58,19 +67,20 @@ globalThis.ImmersionSphere = (() => {
       routes.push({position,panner,front});
     });
     let disposed=false;
-    function set({radius,cutoff,directLevel,bassDb,envelopment,roomLevel,communication=false},immediate=false){
+    function set({radius,cutoff,directLevel,bassDb,envelopment,roomLevel,communication=false,pov=false,roomAmount=.25},immediate=false){
       if(disposed)return;
       const value=(param,v)=>{if(immediate)param.setValueAtTime(v,context.currentTime);else param.setTargetAtTime(v,context.currentTime,.08);};
       routes.forEach(({position,panner})=>{
         value(panner.positionX,position.x*radius);value(panner.positionY,position.y*radius);value(panner.positionZ,position.z*radius);
       });
-      value(voiceHighpass.frequency,communication?120:20);value(voicePresence.gain,communication?2.5:0);
+      value(voiceHighpass.frequency,communication?120:pov?80:20);value(voicePresence.gain,communication?2.5:pov?3:0);
       value(filter.frequency,cutoff);value(bass.gain,bassDb);value(direct.gain,directLevel);
       value(surround.gain,envelopment*(.25+.75*directLevel));
-      value(reverb.gain,roomLevel*(.12+.28*envelopment));
+      value(reverb.gain,pov?0:roomLevel*(.12+.28*envelopment));
+      value(povWet.gain,pov?Math.max(0,Math.min(1,Number.isFinite(roomAmount)?roomAmount:0))*.22:0);
     }
     function destroy(){if(disposed)return;disposed=true;input.disconnect(stereo);nodes.forEach(n=>n.disconnect());}
-    return {routes,voiceHighpass,voicePresence,filter,bass,direct,surround,reverb,mid,side,set,destroy};
+    return {routes,povWet,povRoom,voiceHighpass,voicePresence,filter,bass,direct,surround,reverb,mid,side,set,destroy};
   }
   return {positions,create};
 })();

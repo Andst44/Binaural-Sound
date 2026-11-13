@@ -1,7 +1,7 @@
 # Immersion Sound / Binaural-Sound
 
 Application expérimentale Windows 11 x64 de spatialisation binaurale au casque.
-Profils : **Film, Musique, Communication et Jeu**. Distance virtuelle de 50 cm à
+Profils : **Film, Musique, Communication, Jeu et Vidéo / POV**. Distance virtuelle de 50 cm à
 3 m, volume, basses, amplification et enveloppement mémorisés localement.
 
 L'application utilise Web Audio HRTF dans Microsoft WebView2. Une entrée stéréo
@@ -52,3 +52,10 @@ La présence du dépôt public ne garantit pas l'acceptation par SignPath Founda
 
 Code du projet sous [licence MIT](LICENSE). Les dépendances conservent leurs
 [licences propres](THIRD_PARTY.md). Voir [PRIVACY.md](PRIVACY.md).
+
+## Vidéo / POV
+
+Le profil renforce la présence des voix et ajoute une réverbération courte de
+petite pièce. Le curseur Ambiance de pièce (0–100 %, initialement 25 %) est
+mémorisé. Le traitement concerne le mix complet de la vidéo, sans séparation
+automatique de la voix. Il ne traite pas le microphone.

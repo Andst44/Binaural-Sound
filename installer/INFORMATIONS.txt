@@ -1,6 +1,6 @@
 IMMERSION SOUND — version de développement non signée
 
-Windows 11 x64. Film, Musique, Communication et Jeu.
+Windows 11 x64. Film, Musique, Communication, Jeu et Vidéo / POV.
 
 Cette édition ne contient pas VB-CABLE ni le Runtime Microsoft WebView2.
 Installe ces prérequis depuis leurs sites officiels si nécessaire :
