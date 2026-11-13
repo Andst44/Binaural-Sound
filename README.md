@@ -1,7 +1,7 @@
 # Immersion Sound / Binaural-Sound
 
 Application expérimentale Windows 11 x64 de spatialisation binaurale au casque.
-Profils : **Film, Musique, Communication, Jeu et Vidéo / POV**. Distance virtuelle de 50 cm à
+Profils : **Film, Musique, Communication, Jeu, Vidéo / POV et Concert**. Distance virtuelle de 50 cm à
 3 m, volume, basses, amplification et enveloppement mémorisés localement.
 
 L'application utilise Web Audio HRTF dans Microsoft WebView2. Une entrée stéréo
@@ -59,3 +59,11 @@ Le profil renforce la présence des voix et ajoute une réverbération courte de
 petite pièce. Le curseur Ambiance de pièce (0–100 %, initialement 25 %) est
 mémorisé. Le traitement concerne le mix complet de la vidéo, sans séparation
 automatique de la voix. Il ne traite pas le microphone.
+
+## Concert
+
+Simulation d'une salle de concert, avec scène frontale et ambiance latérale et
+arrière. Le curseur Ambiance de salle (0–100 %, initialement 35 %) règle une
+réverbération stéréo de 1,6 seconde, indépendante de celle du mode POV. Le réglage
+est mémorisé. Aucun bruit de public n'est ajouté. L'effet traite le mix complet ;
+une musique déjà très réverbérée peut nécessiter une ambiance plus faible.

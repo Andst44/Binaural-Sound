@@ -44,6 +44,22 @@ globalThis.ImmersionSphere = (() => {
       for(const [time,level] of [[.018,.65],[.031,.42],[.047,.28],[.073,.16]])data[Math.round((time+ch*.003)*context.sampleRate)]+=level;
     }
     povRoom.buffer=response;filter.connect(povRoom).connect(povWet).connect(output);
+    // A separate concert-hall response keeps the stage clear while widening reflections.
+    const concertRoom=own(context.createConvolver()),concertWet=gain(0);
+    const hallHighpass=own(context.createBiquadFilter());hallHighpass.type='highpass';hallHighpass.frequency.value=180;
+    const hallLowpass=own(context.createBiquadFilter());hallLowpass.type='lowpass';hallLowpass.frequency.value=6500;
+    const hallResponse=context.createBuffer(2,Math.ceil(context.sampleRate*1.6),context.sampleRate);
+    for(let ch=0;ch<2;ch++){
+      const data=hallResponse.getChannelData(ch);let seed=907+ch*233,previous=0;
+      for(let i=0;i<data.length;i++){
+        const t=i/context.sampleRate;seed=(seed*1664525+1013904223)>>>0;
+        previous=.65*previous+.35*(seed/4294967296-.5);
+        if(t>.028)data[i]=previous*.12*Math.exp(-(t-.028)*4.6)*Math.min(1,(t-.028)/.025);
+      }
+      for(const [time,level] of [[.032,.7],[.053,.48],[.081,.32],[.117,.2]])data[Math.round((time+ch*.007)*context.sampleRate)]+=level;
+    }
+    concertRoom.buffer=hallResponse;
+    filter.connect(hallHighpass).connect(hallLowpass).connect(concertRoom).connect(concertWet).connect(output);
     const surroundCount=23;
     positions.forEach((position,index)=>{
       const panner=own(context.createPanner());panner.panningModel='HRTF';panner.rolloffFactor=0;
@@ -67,7 +83,7 @@ globalThis.ImmersionSphere = (() => {
       routes.push({position,panner,front});
     });
     let disposed=false;
-    function set({radius,cutoff,directLevel,bassDb,envelopment,roomLevel,communication=false,pov=false,roomAmount=.25},immediate=false){
+    function set({radius,cutoff,directLevel,bassDb,envelopment,roomLevel,communication=false,pov=false,roomAmount=.25,concert=false,hallAmount=.35},immediate=false){
       if(disposed)return;
       const value=(param,v)=>{if(immediate)param.setValueAtTime(v,context.currentTime);else param.setTargetAtTime(v,context.currentTime,.08);};
       routes.forEach(({position,panner})=>{
@@ -76,11 +92,12 @@ globalThis.ImmersionSphere = (() => {
       value(voiceHighpass.frequency,communication?120:pov?80:20);value(voicePresence.gain,communication?2.5:pov?3:0);
       value(filter.frequency,cutoff);value(bass.gain,bassDb);value(direct.gain,directLevel);
       value(surround.gain,envelopment*(.25+.75*directLevel));
-      value(reverb.gain,pov?0:roomLevel*(.12+.28*envelopment));
+      value(reverb.gain,(pov||concert)?0:roomLevel*(.12+.28*envelopment));
+      value(concertWet.gain,concert?Math.max(0,Math.min(1,Number.isFinite(hallAmount)?hallAmount:0))*.32:0);
       value(povWet.gain,pov?Math.max(0,Math.min(1,Number.isFinite(roomAmount)?roomAmount:0))*.22:0);
     }
     function destroy(){if(disposed)return;disposed=true;input.disconnect(stereo);nodes.forEach(n=>n.disconnect());}
-    return {routes,povWet,povRoom,voiceHighpass,voicePresence,filter,bass,direct,surround,reverb,mid,side,set,destroy};
+    return {routes,concertWet,concertRoom,povWet,povRoom,voiceHighpass,voicePresence,filter,bass,direct,surround,reverb,mid,side,set,destroy};
   }
   return {positions,create};
 })();

@@ -20,6 +20,10 @@ const {pathToFileURL}=require('node:url');
  await page.evaluate(d=>fillDevices(d.map(x=>x.deviceId==='speakers'?{...x,deviceId:'speakers-new'}:x)),devices);
  assert.equal(await page.locator('#audioOutput').inputValue(),'speakers-new');
  assert.equal(await page.evaluate(()=>running),false);
+ await page.selectOption('#profile','concert');await page.locator('#hallAmount').fill('68');await page.reload();
+ assert.equal(await page.locator('#profile').inputValue(),'concert');
+ assert.equal(await page.locator('#hallAmount').inputValue(),'68');
+ assert.equal(await page.locator('#concertControls').isVisible(),true);
  await page.selectOption('#profile','communication');await page.reload();assert.equal(await page.locator('#envelopment').isDisabled(),true);
  // Simulate corrupt storage without the pagehide saver replacing it.
  await page.evaluate(()=>{window.removeEventListener('pagehide',saveSettings);localStorage.setItem(settingsKey,'broken');});
