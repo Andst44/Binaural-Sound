@@ -64,6 +64,7 @@ globalThis.ImmersionSphere = (() => {
     positions.forEach((position,index)=>{
       const panner=own(context.createPanner());panner.panningModel='HRTF';panner.rolloffFactor=0;
       const front=position.level===0&&[0,1,7].includes(position.direction);
+      const rear=position.z>.1;let difference=null;
       if(front){
         const level=gain(position.direction===0?.2:.4);
         if(position.direction===0)mid.connect(level);
@@ -72,21 +73,27 @@ globalThis.ImmersionSphere = (() => {
       }else{
         // Mostly stereo difference: centered speech is kept out of the surround bed.
         // A small mid feed gives mono material a subtle ambient field, not new directions.
-        const difference=gain((position.x<0?1:-1)*.65/surroundCount);
+        difference=gain((position.x<0?1:-1)*.65/surroundCount);
         const mono=gain(.06/surroundCount);
         const allpass=own(context.createBiquadFilter());allpass.type='allpass';
         allpass.frequency.value=350+(index*197)%2300;allpass.Q.value=.6;
-        const delay=own(context.createDelay(.025));delay.delayTime.value=.004+(index%11)*.0012;
+        const delay=own(context.createDelay(.025));delay.delayTime.value=rear?.012+(index%7)*.0015:.004+(index%11)*.0012;
         diffuse.connect(difference);common.connect(mono);
         difference.connect(allpass);mono.connect(allpass);allpass.connect(delay).connect(panner).connect(surround);
       }
-      routes.push({position,panner,front});
+      routes.push({position,panner,front,rear,difference});
     });
     let disposed=false;
-    function set({radius,cutoff,directLevel,bassDb,envelopment,roomLevel,communication=false,pov=false,roomAmount=.25,concert=false,hallAmount=.35},immediate=false){
+    function set({radius,cutoff,directLevel,bassDb,envelopment,roomLevel,communication=false,pov=false,roomAmount=.25,concert=false,hallAmount=.35,rearFocus=.6},immediate=false){
       if(disposed)return;
       const value=(param,v)=>{if(immediate)param.setValueAtTime(v,context.currentTime);else param.setTargetAtTime(v,context.currentTime,.08);};
-      routes.forEach(({position,panner})=>{
+      // Redistribute only the stereo-difference ambience; keep its total gain budget
+      // constant and leave centered speech and the direct stage untouched.
+      const focus=Math.max(0,Math.min(1,Number.isFinite(rearFocus)?rearFocus:.6));
+      const rearWeight=1+2*focus;
+      const weightTotal=routes.reduce((sum,r)=>sum+(r.front?0:r.rear?rearWeight:1),0);
+      routes.forEach(({position,panner,rear,difference})=>{
+        if(difference)value(difference.gain,(position.x<0?1:-1)*.65*(rear?rearWeight:1)/weightTotal);
         value(panner.positionX,position.x*radius);value(panner.positionY,position.y*radius);value(panner.positionZ,position.z*radius);
       });
       value(voiceHighpass.frequency,communication?120:pov?80:20);value(voicePresence.gain,communication?2.5:pov?3:0);

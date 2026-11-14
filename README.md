@@ -67,3 +67,13 @@ arrière. Le curseur Ambiance de salle (0–100 %, initialement 35 %) règle une
 réverbération stéréo de 1,6 seconde, indépendante de celle du mode POV. Le réglage
 est mémorisé. Aucun bruit de public n'est ajouté. L'effet traite le mix complet ;
 une musique déjà très réverbérée peut nécessiter une ambiance plus faible.
+
+## Présence arrière
+
+Le curseur Présence arrière (0–100 %, initialement 60 %) répartit davantage
+l'ambiance issue de la différence stéréo vers les neuf positions arrière.
+Le gain total de ces départs reste constant ; le signal direct et le dosage des
+voix centrées restent inchangés. Des délais courts différencient les réflexions
+arrière. Le réglage est mémorisé et désactivé en Communication.
+Ce traitement ne retrouve pas les directions originales d'une source stéréo.
+La perception avant/arrière dépend du casque, de la source et de l'auditeur.
