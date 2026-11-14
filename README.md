@@ -77,3 +77,15 @@ voix centrées restent inchangés. Des délais courts différencient les réflex
 arrière. Le réglage est mémorisé et désactivé en Communication.
 Ce traitement ne retrouve pas les directions originales d'une source stéréo.
 La perception avant/arrière dépend du casque, de la source et de l'auditeur.
+
+## Sorties audio
+
+Aucune marque de casque n'est requise. Sélection possible des sorties physiques
+exposées par Windows et WebView2 : USB, Bluetooth, jack, enceintes et HDMI.
+Le choix enregistré est prioritaire ; sinon la sortie physique Windows par défaut
+est préférée, puis un casque stéréo disponible. Les périphériques virtuels de
+bouclage sont exclus. La liste se rafraîchit au changement de périphériques quand
+la lecture est arrêtée. Arrêter le son pour changer de sortie.
+
+Le binaural est conçu pour un casque. Le rendu sur enceintes diffère et aucune
+calibration universelle ni validation sur tous les modèles n'est revendiquée.
